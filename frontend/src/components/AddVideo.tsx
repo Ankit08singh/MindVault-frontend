@@ -13,6 +13,7 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { toast } from "sonner";
 
 interface AddProps {
     onVideoAdded?: () => void;
@@ -35,6 +36,7 @@ export function Add({onVideoAdded}:AddProps) {
         setIsLoading(true);
         try{
             await API.post('/videos',form);
+            toast.success('Video added to memory!');
             setformData({videoUrl:''});
             setOpen(false);
             onVideoAdded?.();
@@ -68,6 +70,12 @@ export function Add({onVideoAdded}:AddProps) {
                                 type="text"
                                 onChange={handleOnChange}
                                 value={form.videoUrl}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter'){
+                                        e.preventDefault();
+                                        handleOnSubmit(e);
+                                    }
+                                }}
                                 className="text-white/80 bg-transparent focus-visible:ring-1 focus-visible:ring-blue-200 "
                             />
                         </div>

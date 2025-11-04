@@ -8,6 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import MobileMenuButton from "@/components/MobileMenuButton";
 import { useRouter } from "next/navigation";
 import { Add } from "@/components/AddVideo";
+import { toast } from "sonner";
 
 export interface IVideo{
     _id:string;
@@ -112,6 +113,11 @@ export default function dashboard()  {
                             name="query"
                             placeholder="Search your Memory"
                             onChange={handleOnChange}
+                            onKeyDown={(e) => {
+                                if(e.key === 'Enter' && !isDisable){
+                                    handleSearch();
+                                }
+                            }}
                             type="text"
                             value={form.query}
                             className="text-white/80 bg-transparent focus-visible:ring-1 focus-visible:ring-blue-200 "
