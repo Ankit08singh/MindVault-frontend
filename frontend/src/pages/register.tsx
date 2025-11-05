@@ -32,10 +32,14 @@ export default function register(){
         try{
             const res = await API.post('/auth/register',formData);
             localStorage.setItem('token',res.data.token);
-            router.push('/dashboard');
+            router.push('/login');
+            toast.info("Account created Successfully");
         }catch(err:any){
-            console.log("Register Error: ",err.message);
+            //console.log("Register Error: ",err.message);
+            const errMsg = err.response?.data?.message;
+            toast.error(errMsg); 
             setError(err.message);
+        }finally{
             setloading(false);
         }
     };

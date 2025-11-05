@@ -2,6 +2,7 @@ import { Brain, Home, Search, PlusCircle, Settings, LogOut, ChevronLeft, Chevron
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface SidebarProps {
     isMobileOpen: boolean;
@@ -11,8 +12,10 @@ interface SidebarProps {
 export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
     const router = useRouter();
     const [isCollapsed, setIsCollapsed] = useState(false);
+
     const handleLogout = () => {
         localStorage.removeItem('token');
+        toast.info("Logged Out Successfully");
         router.push('/login');
     }
 

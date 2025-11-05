@@ -34,9 +34,15 @@ export default function login(){
             const res = await API.post('/auth/login',formData);
             localStorage.setItem('token',res.data.token);
             router.push('/dashboard');
+            toast.info("Logged in Successfully");
         }catch(err:any){
-            console.log("Register Error: ",err.message);
-            setError(err.message);
+            // console.log("login Error::: ",err);
+            // console.log("Response", err.response?.data);
+            const errMsg = err.response?.data?.message || err.message;
+            // console.log("Login Error: ",err.message);
+            setError(errMsg);
+            toast.error(errMsg);
+        }finally{
             setloading(false);
         }
     };

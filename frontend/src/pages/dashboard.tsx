@@ -165,6 +165,7 @@ export default function dashboard()  {
                                         title={video.title}
                                         thumbnail={video.thumbnailUrl}
                                         url={video.videoUrl}
+                                        onVideoDeleted={handleGetAll}
                                     />
                                 ))
                             ):(
@@ -183,6 +184,7 @@ export default function dashboard()  {
                                         title={video.title}
                                         thumbnail={video.thumbnailUrl}
                                         url={video.videoUrl}
+                                        onVideoDeleted={handleGetAll}
                                     />
                                 ))
                             ):(

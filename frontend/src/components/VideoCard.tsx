@@ -1,4 +1,8 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Trash } from "lucide-react";
+import API from "@/utils/axios";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "./ui/button";
 
 interface VideoCardProps {
     id: string;
@@ -7,6 +11,7 @@ interface VideoCardProps {
     url: string;
     description?: string;
     duration?: string;
+    onVideoDeleted?: () => void;
 }
 
 export default function VideoCard({ 
@@ -15,8 +20,24 @@ export default function VideoCard({
     thumbnail, 
     url, 
     description,
-    duration 
+    duration ,
+    onVideoDeleted
 }: VideoCardProps) {
+
+    const [form,setFormData] = useState({videoUrl:''});
+
+    const handleDelete = async() => {
+        setFormData({videoUrl:url});
+        try{
+            const res = await API.post('/videos/deletevideo',form);
+            toast.success("Video deleted from the memory");
+            onVideoDeleted?.();
+        }catch(err:any){
+            const errMsg = err.response?.data?.message || err.message;
+            toast.error(errMsg);
+        }
+    };
+
     return (
         <div className="bg-stone-700/50 rounded-lg overflow-hidden hover:bg-stone-700 transition-all hover:shadow-xl hover:shadow-blue-500/10 cursor-pointer group">
             {/* Thumbnail */}
@@ -49,18 +70,30 @@ export default function VideoCard({
                 )}
                 
                 {/* Link */}
-                <a 
-                    href={url} 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-400 text-sm font-medium hover:text-blue-300 transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <span className="font-semibold">
-                        Watch Now
-                    </span>
-                    <ExternalLink size={16} />
-                </a>
+                <div className="flex justify-between items-center">
+                    <a 
+                        href={url} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-blue-400 text-sm font-medium hover:text-blue-300 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <span className="font-semibold">
+                            Watch Now
+                        </span>
+                        <ExternalLink size={16} />
+                    </a>
+                    <Button className="bg-red-200/50"
+                        onClick={() => 
+                            toast("Are you sure you want to delete this?",{
+                                action:{
+                                    label:"Yes",
+                                    onClick:handleDelete,
+                                },
+                            })
+                        }
+                    ><Trash className="text-red-950/85" size={18} /></Button>
+                </div>
             </div>
         </div>
     );
