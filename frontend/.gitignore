@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+frontend/src/components/folderComponent.tsx
+frontend/src/pages/assign.tsx
+frontend/src/pages/assign2.tsx

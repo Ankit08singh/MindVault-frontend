@@ -1,47 +1,53 @@
-import { ExternalLink, Trash } from "lucide-react";
+import { ExternalLink, Trash, FileText } from "lucide-react";
 import API from "@/utils/axios";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
-interface VideoCardProps {
+interface ArticleCardProps {
     id: string;
     title: string;
-    thumbnail: string;
     url: string;
-    description?: string;
-    duration?: string;
-    onVideoDeleted?: () => void;
+    excerpt?: string;
+    featuredImage?: string;
+    siteName?: string;
+    author?: string;
+    wordCount?: number;
+    createdAt: string;
+    onArticleDeleted?: () => void;
     isSelected?: boolean;
     onSelect?: () => void;
     selectionMode?: boolean;
 }
 
-export default function VideoCard({ 
+export default function ArticleCard({ 
     id, 
     title, 
-    thumbnail, 
     url, 
-    description,
-    duration,
-    onVideoDeleted,
+    excerpt,
+    featuredImage,
+    siteName,
+    author,
+    wordCount,
+    createdAt,
+    onArticleDeleted,
     isSelected = false,
     onSelect,
     selectionMode = false
-}: VideoCardProps) {
+}: ArticleCardProps) {
 
-    const [form,setFormData] = useState({videoUrl:''});
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async() => {
-        setFormData({videoUrl:url});
-        // console.log(form);
         try{
-            const res = await API.post('/videos/deletevideo',{videoUrl:url});
-            toast.success("Video deleted from the memory");
-            onVideoDeleted?.();
+            const res = await API.post('/articles/delete', { articleId: id });
+            toast.success("Article deleted from memory");
+            onArticleDeleted?.();
         }catch(err:any){
             const errMsg = err.response?.data?.message || err.message;
             toast.error(errMsg);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -49,7 +55,7 @@ export default function VideoCard({
         <div className={`relative bg-white/80 backdrop-blur-md rounded-lg overflow-hidden border ${
             isSelected ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2' : 'border-[#B4BEC9]/30'
         } hover:border-[#C5B67B]/60 transition-all hover:shadow-lg hover:shadow-[#C5B67B]/20 cursor-pointer group hover:scale-102 duration-300`}>
-            {/* Selection Checkbox - Always show if selectionMode active */}
+            {/* Selection Checkbox */}
             {onSelect && (
                 <div className={`absolute top-2 left-2 z-10 ${
                     selectionMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
@@ -64,17 +70,17 @@ export default function VideoCard({
                 </div>
             )}
             
-            {/* Thumbnail */}
-            <div className="relative aspect-video overflow-hidden">
-                <img 
-                    src={thumbnail} 
-                    alt={title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                {/* Optional Duration Badge */}
-                {duration && (
-                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                        {duration}
+            {/* Featured Image or Placeholder */}
+            <div className="relative aspect-video overflow-hidden bg-linear-to-br from-[#CCC098] to-[#9EA58D]">
+                {featuredImage ? (
+                    <img 
+                        src={featuredImage} 
+                        alt={title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <FileText size={64} className="text-[#002333]/30" />
                     </div>
                 )}
             </div>
@@ -86,15 +92,22 @@ export default function VideoCard({
                     {title}
                 </h1>
                 
-                {/* Optional Description */}
-                {description && (
-                    <p className="text-[#002333]/60 text-sm line-clamp-2">
-                        {description}
+                {/* Excerpt */}
+                {excerpt && (
+                    <p className="text-[#002333]/60 text-sm line-clamp-3">
+                        {excerpt}
                     </p>
                 )}
                 
-                {/* Link */}
-                <div className="flex justify-between items-center">
+                {/* Metadata */}
+                <div className="text-xs text-[#002333]/50 flex items-center gap-2">
+                    {siteName && <span>{siteName}</span>}
+                    {siteName && wordCount && <span>•</span>}
+                    {wordCount && <span>{wordCount} words</span>}
+                </div>
+                
+                {/* Actions */}
+                <div className="flex justify-between items-center pt-2">
                     <a 
                         href={url} 
                         target="_blank"
@@ -103,22 +116,26 @@ export default function VideoCard({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <span className="font-semibold">
-                            Watch Now
+                            Read Article
                         </span>
                         <ExternalLink size={16} />
                     </a>
-                    <Button className="bg-red-50 hover:bg-red-100 border border-red-200"
+                    <Button 
+                        className="bg-red-50 hover:bg-red-100 border border-red-200"
                         onClick={() => 
-                            toast("Are you sure you want to delete this?",{
+                            toast("Are you sure you want to delete this article?",{
                                 action:{
                                     label:"Yes",
                                     onClick:handleDelete,
                                 },
                             })
                         }
-                    ><Trash className="text-red-950/85" size={18} /></Button>
+                        disabled={isDeleting}
+                    >
+                        <Trash className="text-red-950/85" size={18} />
+                    </Button>
                 </div>
             </div>
         </div>
     );
-};
+}

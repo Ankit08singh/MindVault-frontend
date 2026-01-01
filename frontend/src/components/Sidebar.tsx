@@ -1,4 +1,4 @@
-import { Brain, Home, Search, PlusCircle, Settings, LogOut, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Brain, Home, Search, PlusCircle, Settings, LogOut, ChevronLeft, ChevronRight, X, FileText } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
 
     const menuItems = [
         { icon: Home, label: "Dashboard", href: "/dashboard", active: true },
+        { icon: FileText, label: "Articles", href: "/articles", active: false },
         { icon: Search, label: "Search", href: "/search", active: false },
         { icon: PlusCircle, label: "Add Video", href: "/add-video", active: false },
         { icon: Settings, label: "Settings", href: "/settings", active: false },
@@ -40,7 +41,7 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
             <aside 
                 className={`
                     fixed lg:sticky top-0 left-0 h-screen
-                    bg-stone-900 border-r border-stone-700 
+                    bg-linear-to-b from-[#002333] to-[#002333]/95 border-r border-[#B4BEC9]/20 
                     flex flex-col z-50
                     transition-all duration-300 ease-in-out
                     ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -48,22 +49,22 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 `}
             >
                 {/* Logo & Brand */}
-                <div className={`p-6 border-b border-stone-700 transition-all duration-300 ${isCollapsed ? 'lg:p-4' : ''}`}>
+                <div className={`p-6 border-b border-white/20 transition-all duration-300 ${isCollapsed ? 'lg:p-4' : ''}`}>
                     {/* Mobile Close Button */}
                     <button 
                         onClick={onMobileClose}
-                        className="absolute top-4 right-4 lg:hidden text-gray-400 hover:text-white"
+                        className="absolute top-4 right-4 lg:hidden text-white hover:text-white/80"
                     >
                         <X size={24} />
                     </button>
 
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
-                            <Brain className="text-white" size={24} />
+                        <div className="w-10 h-10 bg-[#C5B67B] rounded-lg flex items-center justify-center shrink-0 shadow-md">
+                            <Brain className="text-[#002333]" size={24} />
                         </div>
                         <div className={`transition-all duration-300 overflow-hidden ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'w-auto opacity-100'}`}>
-                            <h1 className="text-xl font-bold text-white whitespace-nowrap">MemoryVault</h1>
-                            <p className="text-xs text-gray-400 whitespace-nowrap">Your Video Memory</p>
+                            <h1 className="text-xl font-bold text-white whitespace-nowrap">MindVault</h1>
+                            <p className="text-xs text-white/70 whitespace-nowrap">Your Digital Brain</p>
                         </div>
                     </div>
                 </div>
@@ -79,8 +80,8 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                                 group relative flex items-center gap-3 px-4 py-3 rounded-lg 
                                 transition-all duration-200
                                 ${item.active 
-                                    ? 'bg-stone-800 text-white' 
-                                    : 'text-gray-400 hover:text-white hover:bg-stone-800'
+                                    ? 'bg-[#C5B67B]/20 text-white shadow-md' 
+                                    : 'text-white/70 hover:text-white hover:bg-white/10'
                                 }
                                 ${isCollapsed ? 'lg:justify-center' : ''}
                             `}
@@ -92,9 +93,9 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
 
                             {/* Tooltip on hover when collapsed */}
                             {isCollapsed && (
-                                <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-stone-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
+                                <div className="hidden lg:block fixed left-full ml-2 px-3 py-2 bg-white/20 backdrop-blur-xl text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
                                     {item.label}
-                                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-stone-800 rotate-45"></div>
+                                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-white/20 rotate-45"></div>
                                 </div>
                             )}
                         </Link>
@@ -110,11 +111,11 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 </div> */}
 
                 {/* Logout Button */}
-                <div className="p-4 border-t border-stone-700">
+                <div className="p-4 border-t border-white/20">
                     <button 
                         className={`
                             group relative w-full flex items-center gap-3 px-4 py-3 
-                            text-gray-400 hover:text-red-400 hover:bg-stone-800 
+                            text-white/70 hover:text-red-300 hover:bg-white/10 
                             rounded-lg transition-all duration-200
                             ${isCollapsed ? 'lg:justify-center' : ''}
                         `}
@@ -127,9 +128,9 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
 
                         {/* Tooltip on hover when collapsed */}
                         {isCollapsed && (
-                            <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-stone-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
+                            <div className="hidden lg:block absolute left-full ml-2 px-3 py-2 bg-white/20 backdrop-blur-xl text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
                                 Logout
-                                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-stone-800 rotate-45"></div>
+                                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-white/20 rotate-45"></div>
                             </div>
                         )}
                     </button>
@@ -138,8 +139,8 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
                 {/* Desktop Collapse Toggle */}
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 bg-stone-800 border border-stone-700 
-                    rounded-full items-center justify-center text-gray-400 hover:text-white hover:bg-stone-700 transition-colors"
+                    className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 bg-[#C5B67B] border border-[#B4BEC9]/30 
+                    rounded-full items-center justify-center text-[#002333] hover:bg-[#CCC098] transition-colors shadow-lg"
                 >
                     {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                 </button>
