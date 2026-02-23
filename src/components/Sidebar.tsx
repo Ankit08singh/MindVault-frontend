@@ -1,4 +1,4 @@
-import { Brain, Home, Search, PlusCircle, Settings, LogOut, ChevronLeft, ChevronRight, X, FileText } from "lucide-react";
+import { Brain, Home, Video, Settings, LogOut, ChevronLeft, ChevronRight, X, FileText } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,9 +7,10 @@ import { toast } from "sonner";
 interface SidebarProps {
     isMobileOpen: boolean;
     onMobileClose: () => void;
+    label: string;
 }
 
-export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
+export default function Sidebar({ isMobileOpen, onMobileClose, label }: SidebarProps) {
     const router = useRouter();
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -20,11 +21,10 @@ export default function Sidebar({ isMobileOpen, onMobileClose }: SidebarProps) {
     }
 
     const menuItems = [
-        { icon: Home, label: "Dashboard", href: "/dashboard", active: true },
-        { icon: FileText, label: "Articles", href: "/articles", active: false },
-        { icon: Search, label: "Search", href: "/search", active: false },
-        { icon: PlusCircle, label: "Add Video", href: "/add-video", active: false },
-        { icon: Settings, label: "Settings", href: "/settings", active: false },
+        { icon: Home, label: "Dashboard", href: "/dashboard", active: label === 'Dashboard' },
+        { icon: FileText, label: "Articles", href: "/articles", active: label === 'Articles' },
+        { icon: Video, label: "Videos", href: "/videos", active: label === 'Videos' },
+        { icon: Settings, label: "Settings", href: "/settings", active: label === 'Settings' },
     ];
 
     return (

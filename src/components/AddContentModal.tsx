@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -27,9 +27,19 @@ export function AddContentModal({ onContentAdded }: AddContentModalProps) {
         setLoading(false);
     };
 
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, []);
+
     const handleClose = () => {
         setOpen(false);
-        setTimeout(resetModal, 200); // Reset after animation
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(resetModal, 200);
     };
 
     const validateUrl = (url: string, type: ContentType): string | null => {

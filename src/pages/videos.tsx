@@ -1,23 +1,17 @@
-import { useEffect, useMemo, useCallback, useState, useRef } from "react";
-import { useRouter } from "next/router";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader, LucideSearchX, Search, RefreshCw } from "lucide-react";
-import ContentCard from "@/components/ContentCard";
-import Sidebar from "@/components/Sidebar";
-import MobileMenuButton from "@/components/MobileMenuButton";
-import { AddContentModal } from "@/components/AddContentModal";
-import { useContentStore } from "@/stores/useContentStore";
-import { 
-    useContentInfinite, 
-    useSearchContent, 
-    useSyncVideos, 
-    useImportLikedVideos, 
-    useBulkDeleteContent 
-} from "@/hooks/useContent";
+import { useEffect, useCallback, useMemo, useState } from 'react';
+import { useRouter } from 'next/router';
+import { toast } from 'sonner';
+import Sidebar from '@/components/Sidebar';
+import MobileMenuButton from '@/components/MobileMenuButton';
+import { Add } from '@/components/AddVideo';
+import VideoCard from '@/components/VideoCard';
+import { Button } from '@/components/ui/button';
+import { Loader, RefreshCw, Search, LucideSearchX } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useVideoStore } from '@/stores/useVideoStore';
+import { useVideosInfinite, useSearchVideos, useBulkDeleteVideos, IVideo } from '@/hooks/useVideos';
 
-export default function Dashboard() {
+export default function Videos() {
     const router = useRouter();
     const [isAuthChecked, setIsAuthChecked] = useState(false);
     
@@ -39,45 +33,42 @@ export default function Dashboard() {
         setSearchQuery,
         setIsSearched,
         clearSearch,
-    } = useContentStore();
+    } = useVideoStore();
     
     // React Query hooks
     const {
-        data: contentData,
+        data: videosData,
         isLoading,
         isFetchingNextPage,
         hasNextPage,
         fetchNextPage,
         refetch,
         isRefetching,
-    } = useContentInfinite(sortBy, sortOrder);
+    } = useVideosInfinite(sortBy, sortOrder);
     
-    const [submitedSearch, setSubmittedSearch] = useState("");
-
+    const [submittedSearch, setSubmittedSearch] = useState("");
+    
     const {
         data: searchResults,
         isLoading: isSearching,
-    } = useSearchContent(submitedSearch, isSearched);
+    } = useSearchVideos(submittedSearch, isSearched);
     
-    const syncMutation = useSyncVideos();
-    const importMutation = useImportLikedVideos();
-    const bulkDeleteMutation = useBulkDeleteContent();
+    const bulkDeleteMutation = useBulkDeleteVideos();
     
-    // Flatten paginated content
-    const content = useMemo(() => {
-        return contentData?.pages.flatMap(page => page.data) ?? [];
-    }, [contentData]);
+    // Flatten paginated videos
+    const videos = useMemo(() => {
+        return videosData?.pages.flatMap(page => page.data) ?? [];
+    }, [videosData]);
     
     // Get current items based on search state
-    const currentItems = isSearched ? (searchResults ?? []) : content;
+    const currentItems = isSearched ? (searchResults ?? []) : videos;
     
     // Get pagination info from last page
     const pagination = useMemo(() => {
-        const lastPage = contentData?.pages[contentData.pages.length - 1];
-        return lastPage?.pagination ?? { total: 0, showing: '', hasMore: false };
-    }, [contentData]);
+        const lastPage = videosData?.pages[videosData.pages.length - 1];
+        return lastPage?.pagination ?? { total: 0, showing: '' };
+    }, [videosData]);
     
-
     // Check auth
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -87,15 +78,6 @@ export default function Dashboard() {
             setIsAuthChecked(true);
         }
     }, [router]);
-    
-    // Auto-sync on mount (ref prevents re-triggering)
-    const hasSynced = useRef(false);
-    useEffect(() => {
-        if (!hasSynced.current && isAuthChecked) {
-            hasSynced.current = true;
-            syncMutation.mutate();
-        }
-    }, [syncMutation, isAuthChecked]);
     
     // Handlers
     const handleSearch = useCallback(() => {
@@ -111,8 +93,8 @@ export default function Dashboard() {
     }, [clearSearch, clearSelection]);
     
     const handleRefresh = useCallback(() => {
-        syncMutation.mutate();
-    }, [syncMutation]);
+        refetch();
+    }, [refetch]);
     
     const handleLoadMore = useCallback(() => {
         if (hasNextPage) {
@@ -121,31 +103,17 @@ export default function Dashboard() {
     }, [hasNextPage, fetchNextPage]);
     
     const handleSelectAll = useCallback(() => {
-        selectAll(currentItems.map(item => item._id));
+        selectAll(currentItems.map(v => v._id));
     }, [selectAll, currentItems]);
-    
-    const handleImport = useCallback(() => {
-        toast("Are you sure you want to import from your YouTube account?", {
-            action: {
-                label: "Yes",
-                onClick: () => importMutation.mutate(50),
-            },
-        });
-    }, [importMutation]);
-
     
     const handleBulkDelete = useCallback(() => {
         const count = selectedIds.size;
         
-        toast(`Are you sure you want to delete ${count} item${count > 1 ? 's' : ''}?`, {
+        toast(`Are you sure you want to delete ${count} video${count > 1 ? 's' : ''}?`, {
             action: {
                 label: 'Delete',
                 onClick: () => {
-                    const selectedItems = currentItems.filter(item => selectedIds.has(item._id));
-                    const videoIds = selectedItems.filter(item => item.type === 'video').map(item => item._id);
-                    const articleIds = selectedItems.filter(item => item.type === 'article').map(item => item._id);
-                    
-                    bulkDeleteMutation.mutate({ videoIds, articleIds }, {
+                    bulkDeleteMutation.mutate(Array.from(selectedIds), {
                         onSuccess: () => {
                             clearSelection();
                         }
@@ -153,13 +121,13 @@ export default function Dashboard() {
                 }
             }
         });
-    }, [selectedIds, currentItems, bulkDeleteMutation, clearSelection]);
+    }, [selectedIds, bulkDeleteMutation, clearSelection]);
     
-    const handleContentDeleted = useCallback(() => {
+    const handleVideoDeleted = useCallback(() => {
         refetch();
     }, [refetch]);
     
-    const handleContentAdded = useCallback(() => {
+    const handleVideoAdded = useCallback(() => {
         refetch();
     }, [refetch]);
 
@@ -180,8 +148,8 @@ export default function Dashboard() {
             {/* Sidebar */}
             <Sidebar 
                 isMobileOpen={isMobileMenuOpen} 
-                onMobileClose={() => setMobileMenuOpen(false)}
-                label="Dashboard"
+                onMobileClose={() => setMobileMenuOpen(false)} 
+                label="Videos"
             />
             
             {/* Main Content */}
@@ -189,9 +157,9 @@ export default function Dashboard() {
                 <div className="bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-md border border-[#B4BEC9]/30">
                     <div className="max-w-md mr-4 flex justify-between items-center">
                         <Input  
-                            id="query"
-                            name="query"
-                            placeholder="Search your Memory"
+                            id="searchQuery"
+                            name="searchQuery"
+                            placeholder="Search your Videos"
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && searchQuery.trim()) {
@@ -220,7 +188,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-4">
                             {isSearched ? (
                                 <div className="flex items-center gap-3">
-                                    <h1 className="text-2xl text-[#002333] font-semibold">Search Result</h1>
+                                    <h1 className="text-2xl text-[#002333] font-semibold">Search Results</h1>
                                     <Button className="bg-[#002333] hover:bg-[#002333]/80" onClick={handleClearSearch} size="sm">
                                         <LucideSearchX size={18} className="text-white mr-1" />
                                         Clear
@@ -228,7 +196,7 @@ export default function Dashboard() {
                                     <p className="text-[#002333]/70">{searchResults?.length ?? 0} Results</p>
                                 </div>
                             ) : (
-                                <h1 className="text-2xl text-[#002333] font-semibold">Your Memory</h1>
+                                <h1 className="text-2xl text-[#002333] font-semibold">Your Videos</h1>
                             )}
                             
                             {/* Selection Mode Toolbar */}
@@ -283,34 +251,20 @@ export default function Dashboard() {
                             
                             <Button
                                 onClick={handleRefresh}
-                                disabled={syncMutation.isPending || isRefetching}
+                                disabled={isRefetching}
                                 variant="outline"
                                 size="sm"
                                 className="border-[#B4BEC9]/40 text-[#002333] hover:bg-[#B4BEC9]/10"
                             >
-                                <RefreshCw size={16} className={`mr-1 ${syncMutation.isPending || isRefetching ? 'animate-spin' : ''}`} />
-                                {syncMutation.isPending ? 'Checking...' : 'Check New'}
+                                <RefreshCw size={16} className={`mr-1 ${isRefetching ? 'animate-spin' : ''}`} />
+                                {isRefetching ? 'Refreshing...' : 'Refresh'}
                             </Button>
-                            <AddContentModal onContentAdded={handleContentAdded} />
-                            <Button 
-                                onClick={handleImport}
-                                disabled={importMutation.isPending}
-                                className="bg-[#002333] hover:bg-[#002333]/80 text-white"
-                            >
-                                {importMutation.isPending ? (
-                                    <>
-                                        <Loader size={16} className="animate-spin mr-1" />
-                                        Importing...
-                                    </>
-                                ) : (
-                                    'Import Videos'
-                                )}
-                            </Button>
+                            <Add onVideoAdded={handleVideoAdded} />
                         </div>
                     </div>
 
                     {/* Sorting and Pagination Info */}
-                    {!isSearched && content.length > 0 && (
+                    {!isSearched && videos.length > 0 && (
                         <div className="flex justify-between items-center mb-4 px-6 pt-4">
                             <div className="flex items-center gap-3">
                                 <label className="text-sm text-[#002333]/70 font-medium">Sort by:</label>
@@ -336,64 +290,70 @@ export default function Dashboard() {
                             </div>
                             
                             <p className="text-sm text-[#002333]/60">
-                                {pagination.showing || `${content.length} items`}
+                                {pagination.showing || `${videos.length} videos`}
                             </p>
                         </div>
                     )}
 
-                    {/* Content Grid */}
+                    {/* Videos Grid */}
                     {isLoading ? (
                         <div className="flex justify-center items-center py-20">
                             <Loader size={36} className="animate-spin text-[#002333] mr-4" />
-                            <p className="text-[#002333]/70">Loading your memory...</p>
+                            <p className="text-[#002333]/70">Loading videos...</p>
                         </div>
                     ) : isSearched ? (
                         <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6 p-4">
                             {isSearching ? (
                                 <div className="flex justify-center items-center py-20 col-span-full">
                                     <Loader size={36} className="animate-spin text-[#002333] mr-4" />
-                                    <p className="text-[#002333]/70">Searching your Memories...</p>
+                                    <p className="text-[#002333]/70">Searching your Videos...</p>
                                 </div>
                             ) : (searchResults?.length ?? 0) > 0 ? (
-                                searchResults?.map((item) => (
-                                    <ContentCard
-                                        key={item._id}
-                                        item={item}
-                                        isSelected={selectedIds.has(item._id)}
-                                        onSelect={() => toggleSelect(item._id)}
-                                        onDeleted={handleContentDeleted}
+                                searchResults?.map((video) => (
+                                    <VideoCard
+                                        key={video._id}
+                                        id={video._id}
+                                        title={video.title}
+                                        thumbnail={video.thumbnailUrl}
+                                        url={video.videoUrl}
+                                        onVideoDeleted={handleVideoDeleted}
+                                        isSelected={selectedIds.has(video._id)}
+                                        onSelect={() => toggleSelect(video._id)}
                                         selectionMode={selectionMode}
                                     />
                                 ))
                             ) : (
                                 <p className="text-[#002333]/60 text-center col-span-full py-8">
-                                    Nothing related to this in memory!!
+                                    No videos found matching your search!
                                 </p>
                             )}
                         </div>
                     ) : (
                         <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6 p-4">
-                            {content.length > 0 ? (
-                                content.map((item) => (
-                                    <ContentCard
-                                        key={item._id}
-                                        item={item}
-                                        isSelected={selectedIds.has(item._id)}
-                                        onSelect={() => toggleSelect(item._id)}
-                                        onDeleted={handleContentDeleted}
+                            {videos.length > 0 ? (
+                                videos.map((video) => (
+                                    <VideoCard
+                                        key={video._id}
+                                        id={video._id}
+                                        title={video.title}
+                                        thumbnail={video.thumbnailUrl}
+                                        url={video.videoUrl}
+                                        onVideoDeleted={handleVideoDeleted}
+                                        isSelected={selectedIds.has(video._id)}
+                                        onSelect={() => toggleSelect(video._id)}
                                         selectionMode={selectionMode}
                                     />
                                 ))
                             ) : (
                                 <p className="text-[#002333]/60 text-center col-span-full py-8">
-                                    No Content Saved Yet!!
+                                    No Videos Saved Yet!!
                                 </p>
                             )}
                         </div>
                     )}
                     
                     {/* Load More Button */}
-                    {!isSearched && hasNextPage && content.length > 0 && (
+                    {!isSearched && hasNextPage && videos.length > 0 && (
                         <div className="flex justify-center py-6 border-t border-[#B4BEC9]/20">
                             <Button
                                 onClick={handleLoadMore}
@@ -407,7 +367,7 @@ export default function Dashboard() {
                                         Loading...
                                     </>
                                 ) : (
-                                    `Load More (${pagination.total - content.length} remaining)`
+                                    `Load More (${pagination.total - videos.length} remaining)`
                                 )}
                             </Button>
                         </div>
