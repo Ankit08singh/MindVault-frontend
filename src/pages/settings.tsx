@@ -15,6 +15,8 @@ import {
     Youtube,
     CheckCircle2,
     XCircle,
+    MessageSquare,
+    Send
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import MobileMenuButton from "@/components/MobileMenuButton";
@@ -32,6 +34,9 @@ export default function Settings() {
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState("");
     const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+    const [feedbackText, setFeedbackText] = useState("");
+    const [isSendingFeedback,setIsSendingFeedback] = useState(false);
+
 
     // Hooks
     const { data: profile, isLoading: profileLoading } = useProfile();
@@ -76,6 +81,36 @@ export default function Settings() {
         }
         deleteAccountMutation.mutate();
     }, [deleteConfirmText, deleteAccountMutation]);
+
+    const handleSendFeedback = useCallback(async () => {
+        if(!feedbackText.trim()) return;
+
+        setIsSendingFeedback(true);
+        try{
+            const sheetUrl = process.env.NEXT_PUBLIC_FEEDBACK_SHEET_URL;
+            if(!sheetUrl){
+                toast.error("Feedback service not configured");
+                return;
+            }
+
+            await fetch(sheetUrl,{
+                method:'POST',
+                mode:'no-cors',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    email:profile?.email || 'unknown',
+                    feedback: feedbackText.trim(),
+                }),
+            });
+
+            toast.success("Thank you for your feedback!");
+            setFeedbackText("");
+        }catch{
+            toast.error("Failed to send feedback. Please try again.");
+        }finally{
+            setIsSendingFeedback(false);
+        }
+    },[feedbackText,profile]);
 
     // Loading state
     if (!isAuthChecked) {
@@ -219,6 +254,58 @@ export default function Settings() {
                             </div>
                         )}
                     </section>
+
+                    <div className="bg-white/70 backdrop-blur-md rounded-xl shadow-md border border-[#B4BEC9]/30 p-6">
+                        <h2 className="text-xl font-semibold text-[#002333] flex items-center gap-2 mb-4">
+                            <MessageSquare size={22} className="text-[#002333]" />
+                            Send Feedback
+                        </h2>
+
+                        <p className="text-sm text-[#002333]/60 mb-4">
+                            Help us improve MindVault. Share your thoughts, suggestions, or report bugs.
+                        </p>
+
+                        <div className="space-y-3">
+                            <textarea
+                                value={feedbackText}
+                                onChange={(e) => setFeedbackText(e.target.value)}
+                                placeholder="What's on your mind? Tell us how we can improve..."
+                                rows={4}
+                                maxLength={1000}
+                                className="w-full px-4 py-3 border border-[#B4BEC9]/40 rounded-lg text-[#002333] bg-white/80 placeholder:text-[#002333]/40 focus:outline-none focus:ring-2 focus:ring-[#002333]/20 focus:border-[#002333]/50 resize-none text-sm"
+                            />
+
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-[#002333]/40">
+                                    {feedbackText.length}/1000 characters
+                                </span>
+
+                                <Button
+                                    onClick={handleSendFeedback}
+                                    disabled={!feedbackText.trim() || isSendingFeedback}
+                                    className="bg-[#002333] hover:bg-[#002333]/80 text-white"
+                                >
+                                    {isSendingFeedback ? (
+                                        <>
+                                            <Loader size={16} className="animate-spin mr-2" />
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send size={16} className="mr-2" />
+                                            Send Feedback
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+
+                        {profile?.email && (
+                            <p className="text-xs text-[#002333]/40 mt-3">
+                                Feedback will be sent with your email ({profile.email}) so we can follow up if needed.
+                            </p>
+                        )}
+                    </div>
 
                     {/* ───── Danger Zone ───── */}
                     <section className="bg-white/70 backdrop-blur-md rounded-xl shadow-md border border-red-300/40 p-6">
