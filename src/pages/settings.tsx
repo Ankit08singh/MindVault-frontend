@@ -246,7 +246,7 @@ export default function Settings() {
                                 <div className="text-sm text-[#002333]/60 bg-[#002333]/5 rounded-lg p-3">
                                     <p>
                                         Linking your Google account allows you to import your YouTube
-                                        watch history and liked videos into MindVault. Your Google
+                                        liked videos into MindVault. Your Google
                                         credentials are never stored — we use secure OAuth
                                         authentication.
                                     </p>

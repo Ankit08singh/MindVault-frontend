@@ -8,7 +8,7 @@ interface ContentItem {
     _id: string;
     type: 'video' | 'article';
     title: string;
-    contentUrl: string;
+    contentUrl?: string;
     preview?: string;
     source?: string;
     duration?: string;
@@ -16,6 +16,8 @@ interface ContentItem {
     wordCount?: number;
     author?: string;
     createdAt: string;
+    url?:string;
+    videoUrl?:string;
 }
 
 interface ContentCardProps {
@@ -88,6 +90,12 @@ export default function ContentCard({
         if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
         return `${Math.floor(diffDays / 365)} years ago`;
     };
+
+    if(!item.contentUrl && item.type === 'article'){
+        item.contentUrl=item.url;
+    }else if(!item.contentUrl && item.type === 'video'){
+        item.contentUrl=item.videoUrl;
+    }
 
     return (
         <div 
